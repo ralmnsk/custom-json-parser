@@ -3,6 +3,10 @@ package com.json.mapper;
 import com.json.parser.IParser;
 import com.json.parser.JsonParser;
 import com.json.parser.model.AbstractNode;
+import com.json.test.Address;
+import com.json.test.Car;
+import com.json.test.CarInMap;
+import com.json.test.Person;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -136,5 +141,63 @@ class MapperTest {
         assertEquals(person3.getAge(), testPersons.get(2).getAge());
         assertEquals(person3.getAddress().getCity(), testPersons.get(2).getAddress().getCity());
         assertEquals(person3.getPhones(), testPersons.get(2).getPhones());
+    }
+
+    @Test
+    void mapClassWithMap() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        jsonString = """
+                {
+                 	"model": "bmw",
+                 	"engineVolume": 2.1,
+                 	"properties": {
+                 		"color": "black",
+                 		"type": "sport",
+                 		"madeIn": "EU"
+                 	}
+                 }
+                """;
+        abstractNode = parser.parse(new ByteArrayInputStream(jsonString.getBytes()));
+
+        Car car = (Car) mapper.map(abstractNode, Car.class);
+        assertEquals("bmw", car.getModel());
+        assertEquals(2.1, car.getEngineVolume());
+        assertEquals("black", car.getProperties().get("color"));
+        assertEquals("sport", car.getProperties().get("type"));
+        assertEquals("EU", car.getProperties().get("madeIn"));
+    }
+
+    @Test
+    void mapClassWithClassInMap() throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        jsonString = """
+                {
+                  	"model": "bmw2",
+                  	"engineVolume": 3.2,
+                  	"properties": {
+                  		"car": {
+                  			"model": "bmw",
+                  			"engineVolume": 2.1,
+                  			"properties": {
+                  				"color": "black",
+                  				"type": "sport",
+                  				"madeIn": "EU"
+                  			}
+                  		}
+                  	}
+                  }
+                """;
+        abstractNode = parser.parse(new ByteArrayInputStream(jsonString.getBytes()));
+
+        CarInMap car = (CarInMap) mapper.map(abstractNode, CarInMap.class);
+        assertEquals("bmw2", car.getModel());
+        assertEquals(3.2, car.getEngineVolume());
+
+
+        Map<String, Car> properties = car.getProperties();
+        Car innerCar = properties.get("car");
+        assertEquals("bmw", innerCar.getModel());
+        assertEquals(2.1, innerCar.getEngineVolume());
+        assertEquals("black", innerCar.getProperties().get("color"));
+        assertEquals("sport", innerCar.getProperties().get("type"));
+        assertEquals("EU", innerCar.getProperties().get("madeIn"));
     }
 }

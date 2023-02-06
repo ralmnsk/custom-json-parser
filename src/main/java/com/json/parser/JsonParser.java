@@ -335,7 +335,7 @@ public class JsonParser implements IParser {
     }
 
     private boolean isContainsBoolean(List<Character> characters) {
-        String s = normalize(characters).toLowerCase();
+        String s = normalize(characters);//.toLowerCase(); //NEW
         return s.equals(BOOLEAN_TRUE) || s.equals(BOOLEAN_FALSE);
     }
 

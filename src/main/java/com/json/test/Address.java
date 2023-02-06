@@ -1,4 +1,4 @@
-package com.json.mapper;
+package com.json.test;
 
 public class Address {
     private String city;

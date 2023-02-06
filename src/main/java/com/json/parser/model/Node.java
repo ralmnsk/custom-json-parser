@@ -18,7 +18,7 @@ public class Node extends AbstractNode {
         if (key == null || key.isEmpty()) {
             throw new ParseException("Key could not be null or empty");
         }
-        nodes.put(key.toLowerCase(), value);
+        nodes.put(key, value);
     }
 
     public Map<String, Object> getNodes() {

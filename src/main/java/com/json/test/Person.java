@@ -1,4 +1,4 @@
-package com.json.mapper;
+package com.json.test;
 
 import java.util.List;
 

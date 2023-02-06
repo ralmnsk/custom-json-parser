@@ -7,8 +7,11 @@ import com.json.parser.model.Node;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class Mapper implements IMapper {
     private static final String NODE_CLASS_NAME = "Node";
@@ -53,6 +56,10 @@ public class Mapper implements IMapper {
 
     private Object nextFieldValue(AbstractNode abstractNode, Class<?> clazz) throws IllegalAccessException,
             ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+        if (Objects.equals(clazz, Map.class)) {
+            Node classNode = (Node) abstractNode;
+            return classNode.getNodes();
+        }
         Node classNode = getClassNode((Node) abstractNode, clazz);
         Object classObject = Class.forName(clazz.getName()).getConstructor().newInstance();
         Field[] fields = clazz.getDeclaredFields();
