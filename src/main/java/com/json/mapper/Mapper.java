@@ -7,7 +7,9 @@ import com.json.parser.model.Node;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,11 +56,35 @@ public class Mapper implements IMapper {
         return listObject;
     }
 
-    private Object nextFieldValue(AbstractNode abstractNode, Class<?> clazz) throws IllegalAccessException,
+    private Object nextFieldValue(AbstractNode abstractNode, Class<?> clazz) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException, NoSuchMethodException, InstantiationException {
+        return nextFieldValue(abstractNode, clazz, null);
+    }
+
+    private Object nextFieldValue(AbstractNode abstractNode, Class<?> clazz, Field previousField) throws IllegalAccessException,
             ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException {
         if (Objects.equals(clazz, Map.class)) {
-            Node classNode = (Node) abstractNode;
-            return classNode.getNodes();
+            Node mapClassNode = (Node) abstractNode;
+            ParameterizedType type = (ParameterizedType) previousField.getGenericType();
+            Type[] types = type.getActualTypeArguments();
+            Map<Object, Object> map = new LinkedHashMap<>();
+            mapClassNode.getNodes().entrySet().forEach(e -> {
+                Object v = e.getValue();
+                if (v.getClass().getSimpleName().equals("Node") || v.getClass().getSimpleName().equals("ListNode")) {
+                    AbstractNode absNode = (AbstractNode) v;
+                    if (absNode.isNode()) {
+                        try {
+                            String className = types[1].getTypeName();
+                            Object value = nextFieldValue(absNode, Class.forName(className));
+                            map.put(e.getKey(), value);
+                        } catch (Exception ex) {
+                            throw new MapperException("Mapper Exception.", ex);
+                        }
+                    }
+                } else {
+                    map.put(e.getKey(), e.getValue());
+                }
+            });
+            return map;
         }
         Node classNode = getClassNode((Node) abstractNode, clazz);
         Object classObject = Class.forName(clazz.getName()).getConstructor().newInstance();
@@ -72,7 +98,7 @@ public class Mapper implements IMapper {
                 case "Node" -> {
                     Class<?> fieldClass = field.getType();
                     AbstractNode fieldAbstractNode = (AbstractNode) value;
-                    value = nextFieldValue(fieldAbstractNode, fieldClass);
+                    value = nextFieldValue(fieldAbstractNode, fieldClass, field);
                 }
                 case "ListNode" -> {
                     ListNode listNode = (ListNode) value;

@@ -22,7 +22,7 @@ public class Node extends AbstractNode {
     }
 
     public Map<String, Object> getNodes() {
-        return Collections.unmodifiableMap(nodes);
+        return nodes;
     }
 
 }
